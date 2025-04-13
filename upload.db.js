@@ -5,30 +5,47 @@ import { News } from "./news.model.js";
 
 const uploadNewsData = async (rawNewsData, uri) => {
     try {
-        // Connect to MongoDB (update URI accordingly)
+        // Connect once (or remove if you keep a global connection)
         await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
 
-        // Optional: transform/clean data before saving
-        const formattedData = rawNewsData.map((item) => ({
-            ...item,
-            article_id: item.article_id.toLowerCase(),
-            pubDate: new Date(item.pubDate),
-        }));
+        const formattedData = rawNewsData.map((item) => {
+            // Normalize array fields to strings
+            const creator = Array.isArray(item.creator)
+                ? item.creator.join(", ")
+                : item.creator;
+            const source_name = Array.isArray(item.source_name)
+                ? item.source_name.join(", ")
+                : item.source_name;
 
-        // Use bulkWrite for better performance (insert multiple documents at once)
+            // Ensure keywords is always an array of strings
+            const keywords = Array.isArray(item.keywords)
+                ? item.keywords
+                : item.keywords
+                    ? [item.keywords]
+                    : [];
+
+            return {
+                ...item,
+                article_id: item.article_id.toLowerCase(),
+                pubDate: new Date(item.pubDate),
+                creator,
+                source_name,
+                keywords,
+            };
+        });
+
         const bulkOps = formattedData.map((article) => ({
             updateOne: {
                 filter: { article_id: article.article_id },
                 update: { $set: article },
-                upsert: true, // Insert if the document doesn't exist
+                upsert: true,
             },
         }));
 
-        // Execute the bulk write operation
-        if (bulkOps.length > 0) {
+        if (bulkOps.length) {
             await News.bulkWrite(bulkOps);
         }
 
