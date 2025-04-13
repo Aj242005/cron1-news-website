@@ -20,8 +20,10 @@ app.get("/", (req, res) => {
 
 app.listen(process.env.PORT, () => {
     console.log(`App listening at ${process.env.PORT}`);
-    
-    // Start the cron job immediately
+    setTimeout(() => {
+        console.log(`Inside the safe setTimeout before we reach the main body , pov issue with onrender free verse`)
+    }, 55000);
+    console.log(`Surpassed the safe timeout zone now ready to do the job !!`)
     runCronJob();
     setInterval(runCronJob, 3000000); // Run every 50 minutes
 });
