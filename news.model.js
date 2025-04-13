@@ -1,3 +1,5 @@
+// news.model.js
+
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
@@ -25,6 +27,8 @@ const newsSchema = new Schema(
         creator: {
             type: String,
             required: true,
+            // If the API gives you ['Reuters'], this setter will turn it into 'Reuters'
+            set: (v) => (Array.isArray(v) ? v.join(", ") : v),
         },
         description: {
             type: String,
@@ -41,6 +45,8 @@ const newsSchema = new Schema(
         source_name: {
             type: String,
             required: true,
+            // Same setter here
+            set: (v) => (Array.isArray(v) ? v.join(", ") : v),
         },
     },
     { timestamps: true }

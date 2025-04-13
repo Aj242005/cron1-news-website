@@ -5,37 +5,20 @@ import { News } from "./news.model.js";
 
 const uploadNewsData = async (rawNewsData, uri) => {
     try {
-        // Connect once (or remove if you keep a global connection)
         await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
 
-        const formattedData = rawNewsData.map((item) => {
-            // Normalize array fields to strings
-            const creator = Array.isArray(item.creator)
-                ? item.creator.join(", ")
-                : item.creator;
-            const source_name = Array.isArray(item.source_name)
-                ? item.source_name.join(", ")
-                : item.source_name;
-
-            // Ensure keywords is always an array of strings
-            const keywords = Array.isArray(item.keywords)
-                ? item.keywords
-                : item.keywords
-                    ? [item.keywords]
-                    : [];
-
-            return {
-                ...item,
-                article_id: item.article_id.toLowerCase(),
-                pubDate: new Date(item.pubDate),
-                creator,
-                source_name,
-                keywords,
-            };
-        });
+        const formattedData = rawNewsData.map((item) => ({
+            ...item,
+            // ensure we only pass strings/arrays and let the schema setter do the rest
+            creator: item.creator,
+            source_name: item.source_name,
+            keywords: Array.isArray(item.keywords) ? item.keywords : [],
+            article_id: item.article_id.toLowerCase(),
+            pubDate: new Date(item.pubDate),
+        }));
 
         const bulkOps = formattedData.map((article) => ({
             updateOne: {
